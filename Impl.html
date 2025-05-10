@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Todo App with !React</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .app-container {
+      display: flex;
+      min-height: 500px;
+      border: 1px solid #ddd;
+    }
+
+    .sidebar {
+      width: 200px;
+      background: #f5f5f5;
+      padding: 20px;
+      border-right: 1px solid #ddd;
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #eee;
+    }
+
+    .todo-item.completed {
+      background-color: #f9f9f9;
+      text-decoration: line-through;
+      color: #666;
+    }
+
+    .todo-item button {
+      margin-left: 10px;
+    }
+
+    .filters button {
+      margin-right: 5px;
+      margin-bottom: 10px;
+    }
+
+    .stats {
+      margin-top: 20px;
+      padding: 10px;
+      background: #f9f9f9;
+      border-radius: 4px;
+    }
+
+    input[type="text"] {
+      padding: 8px;
+      width: 70%;
+      margin-right: 10px;
+    }
+
+    button {
+      padding: 8px 12px;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #3a80d2;
+    }
+
+    button.active {
+      background: #2a70c2;
+    }
+
+    button.danger {
+      background: #e25c4a;
+    }
+
+    .priority-high {
+      border-left: 4px solid #e74c3c;
+    }
+
+    .priority-medium {
+      border-left: 4px solid #f39c12;
+    }
+
+    .priority-low {
+      border-left: 4px solid #3498db;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <script>
+    const LOREM = "Lorem ipsum dolor sit amet..."; // shortened for brevity
+    function tag(name, ...children) {
+      const result = document.createElement(name);
+      for (const child of children) {
+        if (child === null || child === undefined) continue;
+        else if (typeof (child) === 'string') result.appendChild(document.createTextNode(child));
+        else if (typeof (child) === 'function') child(result); // Support for component nesting
+        else result.appendChild(child);
+      }
+      result.att$ = function (name, value) {this.setAttribute(name, value); return this;};
+      result.style$ = function (styles) {Object.assign(this.style, styles); return this;}; // Better styling
+      result.on$ = function (event, callback) {this.addEventListener(event, callback); return this;}; // Better events
+      return result;
+    }
+    const MUNDANE_TAGS = ["canvas", "h1", "h2", "h3", "h4", "h5", "p", "a", "div", "span", "select", "button", "ul", "li"];
+    for (let tagName of MUNDANE_TAGS) window[tagName] = (...children) => tag(tagName, ...children);
+    function img(src) {return tag("img").att$("src", src);}
+    function input(type, value = '') {return tag("input").att$("type", type).att$("value", value);}
+    // Simple State Management
+    function createState(initialState) {
+      let state = initialState;
+      const listeners = [];
+      return {
+        get: () => state,
+        set: (newState) => {state = typeof newState === 'function' ? newState(state) : newState; listeners.forEach(l => l(state));},
+        subscribe: (listener) => {listeners.push(listener); return () => listeners.filter(l => l !== listener);}
+      };
+    }
+    function router(routes) {
+      let result = div();
+      const getRoute = () => {
+        let hashLocation = document.location.hash.split('#')[1] || '/';
+        return hashLocation in routes ? hashLocation : '/404';
+      };
+      function syncHash() {
+        const hashLocation = getRoute();
+        result.replaceChildren(routes[hashLocation]());
+        return result;
+      };
+      syncHash();
+      const listener = () => syncHash();
+      window.addEventListener("hashchange", listener);
+      result.unmount = () => window.removeEventListener("hashchange", listener); // Clean up
+      result.refresh = syncHash;
+      return result;
+    }
+
+    // Todo App Implementation
+    // Create shared state
+    const todoState = createState({
+      todos: [
+        {id: 1, text: 'Learn React', completed: true, priority: 'high'},
+        {id: 2, text: 'Procrastinate', completed: false, priority: 'high'},
+        {id: 3, text: 'Doom Scroll', completed: false, priority: 'medium'},
+        {id: 4, text: 'Build React', completed: false, priority: 'low'}
+      ],
+      filter: 'all',
+      nextId: 5
+    });
+
+    // Components
+    function TodoItem(todo) {
+      return div(
+        input('checkbox').att$('checked', todo.completed ? 'checked' : null)
+          .on$('change', () => {
+            todoState.set(state => ({
+              ...state,
+              todos: state.todos.map(t =>
+                t.id === todo.id ? {...t, completed: !t.completed} : t
+              )
+            }));
+            render();
+          }),
+        span(todo.text),
+        button('Delete').att$('class', 'danger').on$('click', () => {
+          todoState.set(state => ({
+            ...state,
+            todos: state.todos.filter(t => t.id !== todo.id)
+          }));
+          render();
+        })
+      ).att$('class', `todo-item priority-${todo.priority} ${todo.completed ? 'completed' : ''}`);
+    }
+
+    function TodoList() {
+      const state = todoState.get();
+      const filteredTodos = state.todos.filter(todo => {
+        if (state.filter === 'all') return true;
+        if (state.filter === 'active') return !todo.completed;
+        if (state.filter === 'completed') return todo.completed;
+        return todo.priority === state.filter; // filter by priority
+      });
+
+      const todoItems = filteredTodos.map(TodoItem);
+      return div(
+        ...todoItems.length ? todoItems : [p('No todos match the current filter')]
+      );
+    }
+
+    function TodoForm() {
+      const todoInput = input('text').att$('placeholder', 'What needs to be done?');
+      const prioritySelect = tag('select',
+        tag('option', 'High').att$('value', 'high'),
+        tag('option', 'Medium').att$('value', 'medium'),
+        tag('option', 'Low').att$('value', 'low')
+      );
+
+      const form = div(
+        todoInput,
+        prioritySelect,
+        button('Add Todo').on$('click', () => {
+          const text = todoInput.value.trim();
+          if (text) {
+            const state = todoState.get();
+            todoState.set({
+              ...state,
+              todos: [...state.todos, {
+                id: state.nextId,
+                text,
+                completed: false,
+                priority: prioritySelect.value
+              }],
+              nextId: state.nextId + 1
+            });
+            todoInput.value = '';
+            render();
+          }
+        })
+      );
+
+      return form;
+    }
+
+    function FilterButtons() {
+      const state = todoState.get();
+
+      const createFilterButton = (label, filterValue) => {
+        return button(label)
+          .att$('class', state.filter === filterValue ? 'active' : '')
+          .on$('click', () => {
+            todoState.set({...state, filter: filterValue});
+            render();
+          });
+      };
+
+      return div(
+        createFilterButton('All', 'all'),
+        createFilterButton('Active', 'active'),
+        createFilterButton('Completed', 'completed'),
+        div(
+          createFilterButton('High', 'high'),
+          createFilterButton('Medium', 'medium'),
+          createFilterButton('Low', 'low')
+        )
+      ).att$('class', 'filters');
+    }
+
+    function Stats() {
+      const state = todoState.get();
+      const total = state.todos.length;
+      const completed = state.todos.filter(t => t.completed).length;
+      const active = total - completed;
+
+      return div(
+        p(`Total: ${total} | Active: ${active} | Completed: ${completed}`),
+        button('Clear Completed')
+          .on$('click', () => {
+            todoState.set({
+              ...state,
+              todos: state.todos.filter(t => !t.completed)
+            });
+            render();
+          })
+      ).att$('class', 'stats');
+    }
+
+    function Sidebar() {
+      return div(
+        h2('Filters'),
+        FilterButtons(),
+        h2('Statistics'),
+        Stats()
+      ).att$('class', 'sidebar');
+    }
+
+    function TodoApp() {
+      return div(
+        div(
+          Sidebar(),
+          div(
+            h1('Todo App with !React.js'),
+            TodoForm(),
+            h2('Todos'),
+            TodoList()
+          ).att$('class', 'content')
+        ).att$('class', 'app-container')
+      );
+    }
+
+    // Router implementation
+    const appRouter = router({
+      '/': TodoApp,
+      '/active': () => {
+        todoState.set(state => ({...state, filter: 'active'}));
+        return TodoApp();
+      },
+      '/completed': () => {
+        todoState.set(state => ({...state, filter: 'completed'}));
+        return TodoApp();
+      },
+      '/404': () => div(
+        h1('404 - Page Not Found'),
+        p('The page you are looking for does not exist.'),
+        a('Go Home').att$('href', '#/')
+      )
+    });
+
+    // Render function
+    function render() {
+      if (!app.childNodes.length) {
+        app.appendChild(appRouter);
+      } else {
+        appRouter.refresh();
+      }
+    }
+
+    // Initial render
+    const app = document.getElementById('app');
+    render();
+  </script>
+</body>
+
+</html>

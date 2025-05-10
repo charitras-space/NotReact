@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>!React Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* Modern CSS Variables */
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #8b5cf6;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --light: #f9fafb;
+      --dark: #111827;
+      --gray: #6b7280;
+      --body-bg: #f3f4f6;
+      --card-bg: #ffffff;
+      --border-radius: 0.5rem;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --font-main: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    /* Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--body-bg);
+      color: var(--dark);
+      line-height: 1.5;
+      height: 100vh;
+      overflow-x: hidden;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-weight: 600;
+      line-height: 1.25;
+      margin-bottom: 0.5rem;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    /* Layout */
+    .app {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      grid-template-rows: auto 1fr;
+      grid-template-areas:
+        "sidebar header"
+        "sidebar main";
+      height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      grid-area: sidebar;
+      background: var(--dark);
+      color: var(--light);
+      padding: 1.5rem;
+      overflow-y: auto;
+      transition: all 0.3s;
+      box-shadow: var(--shadow);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      color: white;
+    }
+
+    .logo i {
+      margin-right: 0.75rem;
+      color: var(--primary);
+    }
+
+    .nav-title {
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: var(--gray);
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      margin: 0.25rem 0;
+      border-radius: var(--border-radius);
+      color: #e5e7eb;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-item.active {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .nav-item i {
+      margin-right: 0.75rem;
+      font-size: 1rem;
+    }
+
+    /* Header */
+    .header {
+      grid-area: header;
+      background-color: var(--card-bg);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+      z-index: 10;
+    }
+
+    .search-bar {
+      position: relative;
+      width: 300px;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 0.5rem 1rem 0.5rem 2.5rem;
+      border-radius: 9999px;
+      border: 1px solid #e2e8f0;
+      font-size: 0.875rem;
+      background-color: #f8fafc;
+      transition: all 0.2s;
+    }
+
+    .search-bar input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .search-bar i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+    }
+
+    .notification {
+      margin-right: 1.5rem;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .notification i {
+      font-size: 1.25rem;
+      color: var(--gray);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: var(--danger);
+      color: white;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      margin-right: 0.75rem;
+    }
+
+    /* Main Content */
+    .main {
+      grid-area: main;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .page-title {
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-card h3 {
+      color: var(--gray);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-card .value {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-card .trend {
+      display: flex;
+      align-items: center;
+      font-size: 0.875rem;
+    }
+
+    .trend.up {
+      color: var(--success);
+    }
+
+    .trend.down {
+      color: var(--danger);
+    }
+
+    .trend i {
+      margin-right: 0.375rem;
+    }
+
+    .charts-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-card {
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .chart-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    .chart-timeframe {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .timeframe-option {
+      padding: 0.25rem 0.75rem;
+      border-radius: var(--border-radius);
+      font-size: 0.75rem;
+      cursor: pointer;
+      background-color: #f3f4f6;
+    }
+
+    .timeframe-option.active {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .chart-container {
+      height: 300px;
+      position: relative;
+    }
+
+    .pie-stats {
+      margin-top: 1rem;
+    }
+
+    .pie-stat-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .pie-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+    }
+
+    .pie-label {
+      flex: 1;
+    }
+
+    .pie-value {
+      font-weight: 600;
+    }
+
+    .activity-card {
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .activity-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .activity-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    .view-all {
+      color: var(--primary);
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+
+    .activity-item {
+      display: flex;
+      padding: 1rem 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+
+    .activity-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: rgba(99, 102, 241, 0.1);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+    }
+
+    .activity-content {
+      flex: 1;
+    }
+
+    .activity-content p {
+      margin-bottom: 0.25rem;
+    }
+
+    .activity-meta {
+      font-size: 0.75rem;
+      color: var(--gray);
+    }
+
+    /* Canvas styles for charts */
+    canvas {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <script>
+    function tag(name, ...children) {
+      const result = document.createElement(name);
+      for (const child of children) {
+        if (child === null || child === undefined) continue;
+        else if (typeof (child) === 'string') result.appendChild(document.createTextNode(child));
+        else if (typeof (child) === 'function') child(result);
+        else result.appendChild(child);
+      }
+      result.att$ = function (name, value) {
+        if (value !== null && value !== undefined) this.setAttribute(name, value);
+        return this;
+      };
+      result.style$ = function (styles) {
+        Object.assign(this.style, styles);
+        return this;
+      };
+      result.on$ = function (event, callback) {
+        this.addEventListener(event, callback);
+        return this;
+      };
+      result.class$ = function (...classes) {
+        classes.filter(Boolean).forEach(cls => this.classList.add(cls));
+        return this;
+      };
+      return result;
+    }
+
+    const TAGS = ["div", "span", "h1", "h2", "h3", "p", "a", "i", "input", "button", "canvas", "ul", "li"];
+    for (let tagName of TAGS) window[tagName] = (...children) => tag(tagName, ...children);
+
+    // Simple State Management
+    function createState(initialState) {
+      let state = initialState;
+      const listeners = [];
+      return {
+        get: () => state,
+        set: (newState) => {
+          state = typeof newState === 'function' ? newState(state) : newState;
+          listeners.forEach(l => l(state));
+        },
+        subscribe: (listener) => {
+          listeners.push(listener);
+          return () => listeners.filter(l => l !== listener);
+        }
+      };
+    }
+
+    // Draw Line Chart
+    function drawLineChart(canvas, data) {
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height);
+
+      const padding = 30;
+      const chartWidth = width - padding * 2;
+      const chartHeight = height - padding * 2;
+
+      // Find max value
+      const maxValue = Math.max(...data.values) * 1.1;
+
+      // Draw axes
+      ctx.beginPath();
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, height - padding);
+      ctx.lineTo(width - padding, height - padding);
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Draw grid lines
+      const gridLines = 5;
+      ctx.beginPath();
+      for (let i = 0; i <= gridLines; i++) {
+        const y = padding + ((chartHeight / gridLines) * i);
+        ctx.moveTo(padding, y);
+        ctx.lineTo(width - padding, y);
+      }
+      ctx.strokeStyle = '#f3f4f6';
+      ctx.stroke();
+
+      // Draw line
+      const pointSpacing = chartWidth / (data.labels.length - 1);
+
+      ctx.beginPath();
+      data.values.forEach((value, i) => {
+        const x = padding + i * pointSpacing;
+        const y = height - padding - (value / maxValue * chartHeight);
+
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+
+      // Create gradient
+      const gradient = ctx.createLinearGradient(0, 0, 0, height);
+      gradient.addColorStop(0, '#6366f1');
+      gradient.addColorStop(1, '#c7d2fe');
+
+      ctx.strokeStyle = '#6366f1';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Fill area under line
+      ctx.lineTo(padding + (data.labels.length - 1) * pointSpacing, height - padding);
+      ctx.lineTo(padding, height - padding);
+      ctx.fillStyle = 'rgba(99, 102, 241, 0.1)';
+      ctx.fill();
+
+      // Draw points
+      data.values.forEach((value, i) => {
+        const x = padding + i * pointSpacing;
+        const y = height - padding - (value / maxValue * chartHeight);
+
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#6366f1';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+
+      // Draw labels
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+
+      data.labels.forEach((label, i) => {
+        const x = padding + i * pointSpacing;
+        ctx.fillText(label, x, height - 10);
+      });
+
+      // Draw values on y-axis
+      ctx.textAlign = 'right';
+      for (let i = 0; i <= gridLines; i++) {
+        const value = Math.round(maxValue * (1 - i / gridLines));
+        const y = padding + ((chartHeight / gridLines) * i);
+        ctx.fillText(value.toString(), padding - 10, y + 5);
+      }
+    }
+
+    // Draw Pie Chart
+    function drawPieChart(canvas, data) {
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height);
+
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const radius = Math.min(centerX, centerY) - 40;
+
+      const total = data.reduce((sum, item) => sum + item.value, 0);
+
+      let startAngle = 0;
+      data.forEach((item, index) => {
+        const sliceAngle = (item.value / total) * 2 * Math.PI;
+
+        // Draw slice
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
+        ctx.closePath();
+
+        ctx.fillStyle = item.color;
+        ctx.fill();
+
+        // Calculate label position
+        const middleAngle = startAngle + sliceAngle / 2;
+        const labelRadius = radius * 0.7;
+        const labelX = centerX + Math.cos(middleAngle) * labelRadius;
+        const labelY = centerY + Math.sin(middleAngle) * labelRadius;
+
+        // Draw label percentage
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Only draw label if slice is big enough
+        if (sliceAngle > 0.2) {
+          const percentage = Math.round((item.value / total) * 100) + '%';
+          ctx.fillText(percentage, labelX, labelY);
+        }
+
+        startAngle += sliceAngle;
+      });
+
+      // Draw center circle (donut style)
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius * 0.5, 0, 2 * Math.PI);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+    }
+
+    // Application State
+    const appState = createState({
+      activeNavItem: 'dashboard',
+      stats: {
+        revenue: {value: 48240, trend: +12.5},
+        users: {value: 2150, trend: +18.2},
+        orders: {value: 567, trend: -3.6},
+        conversion: {value: 3.24, trend: +2.8}
+      },
+      salesData: {
+        timeframe: 'month',
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+        values: [1200, 1900, 2400, 1800, 2800, 2600, 3100, 2900, 3500]
+      },
+      trafficData: [
+        {label: 'Organic Search', value: 35, color: '#6366f1'},
+        {label: 'Direct', value: 25, color: '#8b5cf6'},
+        {label: 'Social Media', value: 20, color: '#10b981'},
+        {label: 'Referral', value: 15, color: '#f59e0b'},
+        {label: 'Other', value: 5, color: '#6b7280'}
+      ],
+      activities: [
+        {
+          id: 1,
+          icon: 'user-plus',
+          title: 'New user registered',
+          user: 'Alex Thompson',
+          time: '5 minutes ago'
+        },
+        {
+          id: 2,
+          icon: 'shopping-cart',
+          title: 'New order placed',
+          user: 'Sarah Johnson',
+          time: '25 minutes ago'
+        },
+        {
+          id: 3,
+          icon: 'star',
+          title: 'New review submitted',
+          user: 'David Wilson',
+          time: '1 hour ago'
+        },
+        {
+          id: 4,
+          icon: 'credit-card',
+          title: 'Payment processed',
+          user: 'Emma Davis',
+          time: '2 hours ago'
+        }
+      ]
+    });
+
+    // Components
+    function Sidebar() {
+      const state = appState.get();
+
+      const navItems = [
+        {id: 'dashboard', icon: 'gauge', label: 'Dashboard'},
+        {id: 'analytics', icon: 'chart-line', label: 'Analytics'},
+        {id: 'orders', icon: 'shopping-cart', label: 'Orders'},
+        {id: 'customers', icon: 'users', label: 'Customers'},
+        {id: 'products', icon: 'box', label: 'Products'},
+        {id: 'marketing', icon: 'bullhorn', label: 'Marketing'}
+      ];
+
+      const settingsItems = [
+        {id: 'settings', icon: 'gear', label: 'Settings'},
+        {id: 'support', icon: 'circle-question', label: 'Support'}
+      ];
+
+      return div(
+        div(i().class$('fa-solid', 'fa-bolt'), '!React Dashboard').class$('logo'),
+
+        div('MENU').class$('nav-title'),
+        ...navItems.map(item =>
+          div(
+            i().class$('fa-solid', `fa-${item.icon}`),
+            item.label
+          ).class$('nav-item', state.activeNavItem === item.id ? 'active' : '')
+            .on$('click', () => {
+              appState.set({...appState.get(), activeNavItem: item.id});
+              render();
+            })
+        ),
+
+        div('SETTINGS').class$('nav-title'),
+        ...settingsItems.map(item =>
+          div(
+            i().class$('fa-solid', `fa-${item.icon}`),
+            item.label
+          ).class$('nav-item')
+        )
+      ).class$('sidebar');
+    }
+
+    function Header() {
+      return div(
+        // Search bar
+        div(
+          i().class$('fa-solid', 'fa-search'),
+          input().att$('type', 'text').att$('placeholder', 'Search...')
+        ).class$('search-bar'),
+
+        // User info
+        div(
+          div(
+            i().class$('fa-solid', 'fa-bell'),
+            div('3').class$('notification-badge')
+          ).class$('notification'),
+
+          div(
+            div('JD').class$('avatar'),
+            div('John Doe')
+          ).class$('user-profile')
+        ).class$('user-info')
+      ).class$('header');
+    }
+
+    function StatCard(title, value, trend, icon) {
+      const formattedValue = typeof value === 'number'
+        ? value >= 1000
+          ? `${(value / 1000).toFixed(1)}k`
+          : value.toFixed(2).replace(/\.00$/, '')
+        : value;
+
+      const trendIsPositive = trend > 0;
+
+      return div(
+        h3(title),
+        div(formattedValue).class$('value'),
+        div(
+          i().class$('fa-solid', trendIsPositive ? 'fa-arrow-up' : 'fa-arrow-down'),
+          `${Math.abs(trend)}%`
+        ).class$('trend', trendIsPositive ? 'up' : 'down')
+      ).class$('stat-card');
+    }
+
+    function LineChartCard() {
+      const canvas = tag('canvas');
+      const state = appState.get();
+
+      setTimeout(() => {
+        // Set canvas dimensions with device pixel ratio for sharpness
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+
+        // Scale the context for the actual device pixel ratio
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        drawLineChart(canvas, state.salesData);
+      }, 0);
+
+      const timeframeOptions = ['week', 'month', 'quarter', 'year'];
+
+      return div(
+        div(
+          div('Sales Overview').class$('chart-title'),
+          div(
+            ...timeframeOptions.map(option =>
+              div(option.charAt(0).toUpperCase() + option.slice(1))
+                .class$('timeframe-option', state.salesData.timeframe === option ? 'active' : '')
+                .on$('click', () => {
+                  appState.set({
+                    ...appState.get(),
+                    salesData: {...state.salesData, timeframe: option}
+                  });
+                  render();
+                })
+            )
+          ).class$('chart-timeframe')
+        ).class$('chart-header'),
+
+        div(canvas).class$('chart-container')
+      ).class$('chart-card');
+    }
+
+    function PieChartCard() {
+      const canvas = tag('canvas');
+      const state = appState.get();
+
+      setTimeout(() => {
+        // Set canvas dimensions with device pixel ratio for sharpness
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+
+        // Scale the context for the actual device pixel ratio
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        drawPieChart(canvas, state.trafficData);
+      }, 0);
+
+      return div(
+        div(
+          div('Traffic Sources').class$('chart-title')
+        ).class$('chart-header'),
+
+        div(canvas).class$('chart-container'),
+
+        div(
+          ...state.trafficData.map(item =>
+            div(
+              div().class$('pie-color').style$({backgroundColor: item.color}),
+              div(item.label).class$('pie-label'),
+              div(`${item.value}%`).class$('pie-value')
+            ).class$('pie-stat-item')
+          )
+        ).class$('pie-stats')
+      ).class$('chart-card');
+    }
+
+    function ActivityCard() {
+      const state = appState.get();
+
+      return div(
+        div(
+          div('Recent Activity').class$('activity-title'),
+          div('View All').class$('view-all')
+        ).class$('activity-header'),
+
+        ...state.activities.map(activity =>
+          div(
+            div(
+              i().class$('fa-solid', `fa-${activity.icon}`)
+            ).class$('activity-icon'),
+
+            div(
+              p(activity.title),
+              p(`${activity.user}`).style$({fontWeight: '600'}),
+              div(activity.time).class$('activity-meta')
+            ).class$('activity-content')
+          ).class$('activity-item')
+        )
+      ).class$('activity-card');
+    }
+
+    function DashboardPage() {
+      const state = appState.get();
+
+      return div(
+        h1('Dashboard').class$('page-title'),
+
+        div(
+          StatCard('Total Revenue', state.stats.revenue.value, state.stats.revenue.trend),
+          StatCard('Total Users', state.stats.users.value, state.stats.users.trend),
+          StatCard('Orders', state.stats.orders.value, state.stats.orders.trend),
+          StatCard('Conversion Rate', state.stats.conversion.value, state.stats.conversion.trend)
+        ).class$('stats-grid'),
+
+        div(
+          LineChartCard(),
+          PieChartCard()
+        ).class$('charts-row'),
+
+        ActivityCard()
+      ).class$('main');
+    }
+
+    function App() {
+      const state = appState.get();
+      let content;
+
+      switch (state.activeNavItem) {
+        case 'dashboard':
+          content = DashboardPage();
+          break;
+        default:
+          content = div(
+            h1(`${state.activeNavItem.charAt(0).toUpperCase() + state.activeNavItem.slice(1)}`).class$('page-title'),
+            p(`This is the ${state.activeNavItem} page. Content coming soon.`)
+          ).class$('main');
+      }
+
+      return div(
+        Sidebar(),
+        Header(),
+        content
+      ).class$('app');
+    }
+
+    // Render Function
+    function render() {
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+      app.appendChild(App());
+    }
+
+    // Initial render
+    document.addEventListener('DOMContentLoaded', render);
+  </script>
+
+</html>
